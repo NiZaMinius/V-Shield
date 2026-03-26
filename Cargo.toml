@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/vshield-core",
+    "crates/vshield-enc",
+    "crates/vshield-dec",
+]
+resolver = "2"

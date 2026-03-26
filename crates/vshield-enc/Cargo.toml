@@ -1,0 +1,18 @@
+[package]
+name = "vshield-enc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vshield-core = { path = "../vshield-core" }
+image = "0.24"
+clap = { version = "4.4", features = ["derive"] }
+anyhow = "1.0"
+chacha20poly1305 = "0.10"
+sha2 = "0.10"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+serde_json = "1.0"
+
+[[bin]]
+name = "vshield-encode"
+path = "src/main.rs"
