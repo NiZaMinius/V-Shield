@@ -233,7 +233,7 @@ Example: vshield://550e8400-e29b-41d4-a716-446655440000
 
 **Recovery:**
 - Token saved in `metadata.json` in frames directory
-- Token derivable from generator (same exact file → same token)
+- Token derivable from generator (same exact file → different token)
 - **No recovery service.** Don't lose the token.
 
 ---
@@ -366,8 +366,8 @@ We welcome contributions! But please read our guidelines:
 ## ⚖️ Legal
 
 **Please read:**
-- [`DISCLAIMER.md`](DISCLAIMER.md) - What we do/don't handle
-- [`USER_RESPONSIBILITY.md`](USER_RESPONSIBILITY.md) - Your obligations
+- [`DISCLAIMER.md`](legal/DISCLAIMER.md) - What we do/don't handle
+- [`USER_RESPONSIBILITY.md`](legal/USER_RESPONSIBILITY.md) - Your obligations
 
 ### License
 MIT License - See [`LICENSE`](LICENSE) for details
