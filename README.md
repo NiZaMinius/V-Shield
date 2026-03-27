@@ -146,7 +146,7 @@ Each video frame has a strict structure designed to survive YouTube compression:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/v-shield
+git clone https://github.com/NiZaMinius/v-shield
 cd v-shield
 
 # Build encoder
