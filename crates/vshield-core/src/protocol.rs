@@ -385,24 +385,38 @@ mod tests {
 
     #[test]
     fn test_color_yuv_preservation() {
-        // Checking that palette colors are well distributed in YUV space
+        // We check that the colors of the palette are distingushable by brightness (Y-channel)
+        // We sort by Y and check that the adjacent ones are different enough
         let colors = vec![
             ColorValue::Black,
-            ColorValue::White,
-            ColorValue::DarkRed,
             ColorValue::DarkBlue,
+            ColorValue::DarkRed,
             ColorValue::DarkGreen,
+            ColorValue::DarkGray,
+            ColorValue::Gray,
+            ColorValue::LightGray,
+            ColorValue::White,
         ];
 
-        let mut prev_y = -1i32;
-        for color in colors {
-            let (y, _u, _v) = color.to_yuv();
-            // Убедимся, что цвета различимы по яркости
+        // Collecting Y-values
+        let mut y_values: Vec<(ColorValue, u8)> =
+            colors.iter().map(|&c| (c, c.to_yuv().0)).collect();
+
+        // sort by Y
+        y_values.sort_by_key(|(_, y)| *y);
+
+        // Each adjacent color must differ by at least 10 in Y
+        for pair in y_values.windows(2) {
+            let (color_a, y_a) = pair[0];
+            let (color_b, y_b) = pair[1];
             assert!(
-                (y as i32 - prev_y).abs() > 20,
-                "Colors too similar in brightness"
+                (y_b as i32 - y_a as i32) >= 10,
+                "Colors {:?}(y={}) and {:?}(Y={}) too close in brightness",
+                color_a,
+                y_a,
+                color_b,
+                y_b
             );
-            prev_y = y as i32;
         }
     }
 

@@ -32,9 +32,10 @@ pub const ENCRYPTION_OVERHEAD: usize = NONCE_SIZE + TAG_SIZE;
 ///
 /// # Example
 /// ```
+/// use vshield_core::crypto::encrypt;
 /// let key = [0u8; 32];
 /// let plaintext = b"Hello, World!";
-/// let encrypted = encrypt(&key, plaintext);
+/// let encrypted = encrypt(&key, plaintext).unwrap;
 /// assert!(encrypted.len() > plaintext.len()); // overhead for nonce + tag
 /// ```
 pub fn encrypt(key: &[u8; 32], plaintext: &[u8]) -> Result<Vec<u8>, String> {
@@ -75,6 +76,8 @@ pub fn encrypt(key: &[u8; 32], plaintext: &[u8]) -> Result<Vec<u8>, String> {
 ///
 /// # Example
 /// ```
+/// use vshield_core::crypto::decrypt;
+/// use  use vshield_core::crypto::encrypt;
 /// let key = [42u8; 32];
 /// let plaintext = b"Secret message";
 /// let encrypted = encrypt(&key, plaintext).unwrap();

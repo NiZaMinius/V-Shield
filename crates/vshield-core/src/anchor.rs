@@ -46,40 +46,34 @@ pub enum AnchorPosition {
 
 /// Generate a single anchor pattern block
 pub fn generate_anchor(_size: u8) -> Vec<Vec<ColorValue>> {
-    let mut grid = vec![vec![ColorValue::Black; ANCHOR_SIZE_BLOCKS]; ANCHOR_SIZE_BLOCKS];
+    let n = ANCHOR_SIZE_BLOCKS;
+    let mut grid = vec![vec![ColorValue::Black; n]; n];
 
-    // Create 1:1:3:1:1 pattern
-    let pattern_width = ANCHOR_SIZE_BLOCKS / 5;
+    // pattern 1:1:3:1:1 - proportions, unequal parts
+    // for n = 10: [1, 1, 6, 1, 1] in pixles (6 = centrual zone)
+    // alternating: white, black, white,  black, white
 
-    // Horizontal stripes
-    for i in 0..ANCHOR_SIZE_BLOCKS {
-        // Dark stripe
-        for j in 0..pattern_width {
-            grid[i][j] = ColorValue::White;
-        }
-        // Dark stripe
-        for j in pattern_width..2 * pattern_width {
-            grid[i][j] = ColorValue::White;
-        }
-        // Light stripe
-        for j in 2 * pattern_width..5 * pattern_width {
-            grid[i][j] = ColorValue::Black;
-        }
-        // Dark stripe
-        for j in 5 * pattern_width..6 * pattern_width {
-            grid[i][j] = ColorValue::White;
-        }
-        // Dark stripe
-        for j in 6 * pattern_width..ANCHOR_SIZE_BLOCKS {
-            if j < ANCHOR_SIZE_BLOCKS {
-                grid[i][j] = ColorValue::White;
+    let zones: [(usize, ColorValue); 5] = [
+        (1, ColorValue::White),
+        (1, ColorValue::Black),
+        (n - 4, ColorValue::White), // The center takes up the remainder
+        (1, ColorValue::Black),
+        (1, ColorValue::White),
+    ];
+
+    for row in 0..n {
+        let mut col = 0;
+        for (width, color) in &zones {
+            for _ in 0..*width {
+                if col < n {
+                    grid[row][col] = *color;
+                    col += 1;
+                }
             }
         }
     }
-
     grid
 }
-
 /// Detect anchor patterns in a frame
 /// This scans the image for the characteristic 1:1:3:1:1 pattern
 pub fn detect_anchors(frame: &[Vec<ColorValue>], expected_block_size: u8) -> Vec<DetectedAnchor> {

@@ -1,12 +1,13 @@
 /// Error Correction Code (ECC) Module
-/// 
+///
 /// Implements Reed-Solomon error correction for resilience against
 /// YouTube's compression artifacts and data loss.
-/// 
-/// Strategy: Add 20-30% redundancy. If up to K erasures occur, 
+///
+/// Strategy: Add 20-30% redundancy. If up to K erasures occur,
 /// RS can reconstruct all original data as long as K < redundancy_symbols.
-
 use std::cmp::min;
+
+use reed_solomon_erasure::galois_8::ReedSolomon;
 
 /// Reed-Solomon configuration
 #[derive(Debug, Clone, Copy)]
@@ -83,26 +84,20 @@ impl RSEncoder {
             ));
         }
 
-        // Use the reed-solomon-erasure crate
-        use reed_solomon_erasure::galois_8::ReedSolomon;
-
         let rs = ReedSolomon::new(self.config.data_symbols, self.config.parity_symbols)
             .map_err(|e| format!("Failed to create Reed-Solomon encoder: {:?}", e))?;
 
-        let mut shards = vec![vec![0u8; 1]; self.config.total_symbols];
+        let mut buffer = vec![0u8; self.config.total_symbols];
 
         // Set data shards
-        for (i, &byte) in data.iter().enumerate() {
-            shards[i][0] = byte;
-        }
+        buffer[..self.config.data_symbols].copy_from_slice(data);
+        let mut shards: Vec<&mut [u8]> = buffer.chunks_mut(1).collect();
 
         // Compute parity
         rs.encode(&mut shards)
             .map_err(|e| format!("Reed-Solomon encoding failed: {:?}", e))?;
 
-        // Flatten to single vector
-        let result = shards.into_iter().map(|s| s[0]).collect();
-        Ok(result)
+        Ok(buffer)
     }
 
     /// Decode data with potential erasures
@@ -122,10 +117,8 @@ impl RSEncoder {
         let rs = ReedSolomon::new(self.config.data_symbols, self.config.parity_symbols)
             .map_err(|e| format!("Failed to create Reed-Solomon decoder: {:?}", e))?;
 
-        let mut shards: Vec<Option<Vec<u8>>> = symbols
-            .iter()
-            .map(|opt| opt.map(|b| vec![b]))
-            .collect();
+        let mut shards: Vec<Option<Vec<u8>>> =
+            symbols.iter().map(|opt| opt.map(|b| vec![b])).collect();
 
         // Recover missing shards
         rs.reconstruct(&mut shards)
@@ -167,7 +160,11 @@ pub struct MultiBlockDecoder {
 }
 
 impl MultiBlockDecoder {
-    pub fn new(num_blocks: usize, data_symbols_per_block: usize, redundancy_percent: u8) -> Result<Self, String> {
+    pub fn new(
+        num_blocks: usize,
+        data_symbols_per_block: usize,
+        redundancy_percent: u8,
+    ) -> Result<Self, String> {
         let mut blocks = Vec::new();
         for _ in 0..num_blocks {
             let config = ECCConfig::new(data_symbols_per_block, redundancy_percent);
@@ -181,7 +178,11 @@ impl MultiBlockDecoder {
     }
 
     /// Decode a single block
-    pub fn decode_block(&self, block_idx: usize, symbols: &[Option<u8>]) -> Result<Vec<u8>, String> {
+    pub fn decode_block(
+        &self,
+        block_idx: usize,
+        symbols: &[Option<u8>],
+    ) -> Result<Vec<u8>, String> {
         if block_idx >= self.blocks.len() {
             return Err(format!("Block index {} out of range", block_idx));
         }
@@ -265,7 +266,7 @@ mod tests {
         let decoder = MultiBlockDecoder::new(3, 10, 25)?;
         assert_eq!(decoder.num_blocks(), 3);
         assert_eq!(decoder.data_capacity(), 30);
-        assert_eq!(decoder.total_capacity(), 30 + (10 * 3 / 4)); // 30 + 7.5, but truncated
+        assert_eq!(decoder.total_capacity(), 36); // 3 blocks * (10 data + 2 parity)
         Ok(())
     }
 }
